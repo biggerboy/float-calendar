@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>悬浮台历</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      user-select: none;
+    }
+
+    body {
+      overflow: hidden;
+      font-family: 'Microsoft YaHei UI', 'Segoe UI', sans-serif;
+    }
+
+    .float-container {
+      width: 220px;
+      height: 140px;
+      border-radius: 12px;
+      /* 半透明只作用在背景色上，不作用在整层 DOM 上，避免 Windows 透明窗口 GPU 合成错乱 */
+      background: var(--bg-color, rgba(26, 26, 46, 0.88));
+      color: var(--text-color, #ffffff);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.15s ease;
+      -webkit-app-region: drag; /* 允许拖动 */
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      overflow: hidden;
+    }
+
+    .float-container:hover {
+      background: var(--bg-color-hover, rgba(26, 26, 46, 1));
+      transform: scale(1.02);
+    }
+
+    .float-container:active {
+      transform: scale(0.98);
+    }
+
+    .time-line {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      line-height: 1.2;
+      flex-shrink: 0;
+      color: var(--accent-color, #ff5d7a);
+    }
+
+    .date-line {
+      font-size: 12px;
+      line-height: 1.3;
+      margin-top: 3px;
+      flex-shrink: 0;
+      color: var(--text-color, #ffffff);
+      font-weight: 600;
+    }
+
+    .custom-text {
+      font-size: 13px;
+      line-height: 1.3;
+      margin-top: 5px;
+      flex-shrink: 0;
+      text-align: center;
+      max-width: 196px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--text-color, #ffffff);
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .checkin-line {
+      font-size: 11px;
+      line-height: 1.3;
+      margin-top: 3px;
+      flex-shrink: 0;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      color: var(--text-color, #ffffff);
+    }
+
+    .checkin-line .done {
+      color: #7dffc0;
+    }
+
+    .checkin-line .pending {
+      color: #ffd76a;
+    }
+
+    .checkin-line .late {
+      color: #ff9f7a;
+    }
+
+    .countdown-line {
+      font-size: 13px;
+      line-height: 1.3;
+      margin-top: 3px;
+      flex-shrink: 0;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      color: var(--accent-color, #ff5d7a);
+    }
+
+    .countdown-line.done {
+      color: #7dffc0;
+    }
+
+    /* 调整大小指示器（右下角小三角） */
+    .drag-hint {
+      position: absolute;
+      bottom: 2px;
+      right: 6px;
+      font-size: 8px;
+      opacity: 0.3;
+      -webkit-app-region: no-drag;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="float-container" id="floatContainer" title="点击展开 / 拖动移动">
+    <div class="time-line" id="timeDisplay">--:--:--</div>
+    <div class="date-line" id="dateDisplay"></div>
+    <div class="custom-text" id="customText"></div>
+    <div class="checkin-line" id="checkinDisplay"></div>
+    <div class="countdown-line" id="countdownDisplay"></div>
+    <div class="drag-hint">⟷</div>
+  </div>
+
+  <script src="flex.js"></script>
+  <script>
+    let config = {};
+    let todayRecords = { onDuty: null, offDuty: null };
+
+    // 获取配置
+    async function init() {
+      config = await window.api.getConfig();
+      try {
+        todayRecords = await window.api.getRecords();
+      } catch (e) {
+        todayRecords = { onDuty: null, offDuty: null };
+      }
+      applyConfig();
+      updateClock();
+      setInterval(updateClock, 1000);
+
+      // 监听配置更新
+      window.api.onConfigUpdated((newConfig) => {
+        config = newConfig;
+        applyConfig();
+        updateClock();
+      });
+
+      // 监听打卡记录更新（手动打卡 / 钉钉同步）
+      window.api.onRecordsUpdated((rec) => {
+        todayRecords = rec;
+        updateClock();
+      });
+    }
+
+    // 把 #RRGGBB 转成 rgba，让透明度只作用于背景色，文字保持完全不透明
+    function hexToRgba(hex, alpha) {
+      let h = String(hex || '#1a1a2e').replace('#', '');
+      if (h.length === 3) h = h.split('').map(c => c + c).join('');
+      const r = parseInt(h.slice(0, 2), 16) || 0;
+      const g = parseInt(h.slice(2, 4), 16) || 0;
+      const b = parseInt(h.slice(4, 6), 16) || 0;
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    function applyConfig() {
+      const container = document.getElementById('floatContainer');
+      const bg = config.bgColor || '#1a1a2e';
+      const alpha = config.opacity != null ? config.opacity : 0.88;
+
+      container.style.setProperty('--bg-color', hexToRgba(bg, alpha));
+      container.style.setProperty('--bg-color-hover', hexToRgba(bg, 1));
+      container.style.setProperty('--text-color', config.textColor || '#ffffff');
+      container.style.setProperty('--accent-color', config.accentColor || '#ff5d7a');
+
+      document.getElementById('customText').textContent = config.customText || '';
+    }
+
+    function updateClock() {
+      const now = new Date();
+      const h = String(now.getHours()).padStart(2, '0');
+      const m = String(now.getMinutes()).padStart(2, '0');
+      const s = String(now.getSeconds()).padStart(2, '0');
+
+      const timeStr = config.showSeconds ? `${h}:${m}:${s}` : `${h}:${m}`;
+      document.getElementById('timeDisplay').textContent = timeStr;
+
+      if (config.showDate) {
+        const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+        const dateStr = `${now.getMonth() + 1}月${now.getDate()}日 周${weekdays[now.getDay()]}`;
+        document.getElementById('dateDisplay').textContent = dateStr;
+      } else {
+        document.getElementById('dateDisplay').textContent = '';
+      }
+
+      // 打卡状态
+      updateCheckin(h, m);
+    }
+
+    function updateCheckin() {
+      const checkInEl = document.getElementById('checkinDisplay');
+      const cdEl = document.getElementById('countdownDisplay');
+
+      const actualIn = todayRecords.onDuty;
+      const actualOut = todayRecords.offDuty;
+      const late = actualIn ? Flex.isLate(actualIn, config) : false;
+      // 弹性规则推算应下班时间（8:31 打卡 → 18:01 可下班）
+      const target = Flex.computeOffDuty(actualIn, config);
+
+      const inClass = actualIn ? (late ? 'late' : 'done') : 'pending';
+      const outClass = actualOut ? 'done' : 'pending';
+      const inIcon = actualIn ? '✓' : '○';
+      const outIcon = actualOut ? '✓' : '○';
+
+      checkInEl.innerHTML =
+        `<span class="${inClass}">${inIcon}上班 ${actualIn || '未打卡'}</span> ` +
+        `<span class="${outClass}">${outIcon}下班 ${actualOut || target}</span>`;
+
+      // 距下班倒计时
+      if (actualOut) {
+        cdEl.textContent = '已下班 ✓';
+        cdEl.className = 'countdown-line done';
+        return;
+      }
+      const sec = Flex.remainingSeconds(actualIn, config, new Date());
+      if (sec != null && sec <= 0) {
+        cdEl.textContent = '🎉 可以下班了';
+        cdEl.className = 'countdown-line done';
+      } else {
+        cdEl.textContent = '距下班 ' + Flex.formatRemain(sec).replace('还有 ', '');
+        cdEl.className = 'countdown-line';
+      }
+    }
+
+    // 点击展开主窗口（区分点击和拖动）
+    let mouseDownPos = null;
+    let isDragging = false;
+
+    document.getElementById('floatContainer').addEventListener('mousedown', (e) => {
+      mouseDownPos = { x: e.screenX, y: e.screenY };
+      isDragging = false;
+    });
+
+    document.getElementById('floatContainer').addEventListener('mousemove', (e) => {
+      if (mouseDownPos) {
+        const dx = Math.abs(e.screenX - mouseDownPos.x);
+        const dy = Math.abs(e.screenY - mouseDownPos.y);
+        if (dx > 5 || dy > 5) {
+          isDragging = true;
+        }
+      }
+    });
+
+    document.getElementById('floatContainer').addEventListener('mouseup', (e) => {
+      if (!isDragging) {
+        // 纯点击 -> 展开主窗口
+        window.api.expand();
+      }
+      mouseDownPos = null;
+      isDragging = false;
+    });
+
+    // 双击也展开
+    document.getElementById('floatContainer').addEventListener('dblclick', () => {
+      window.api.expand();
+    });
+
+    // 右键菜单（简单的关闭提示）
+    document.getElementById('floatContainer').addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      window.api.expand();
+    });
+
+    init();
+  </script>
+</body>
+</html>

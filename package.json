@@ -1,0 +1,16 @@
+{
+  "name": "float-calendar",
+  "version": "1.0.0",
+  "description": "桌面悬浮台历 - 自定义文字、打卡时间、可拖动悬浮窗",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev"
+  },
+  "keywords": ["electron", "desktop-widget", "floating-clock", "calendar", "attendance", "dingtalk"],
+  "author": "biggerboy",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^33.0.0"
+  }
+}

@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>悬浮台历 - 设置</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+    }
+
+    body {
+      font-family: 'Microsoft YaHei UI', 'Segoe UI', sans-serif;
+      background: #f5f5f5;
+      color: #333;
+      overflow-y: auto;
+      padding-top: 36px; /* 给固定标题栏留出空间 */
+    }
+
+    /* ===== 标题栏 ===== */
+    .title-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      height: 36px;
+      flex-shrink: 0;
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      -webkit-app-region: drag;
+      cursor: default;
+      box-shadow: 0 1px 6px rgba(0, 0, 0, 0.18);
+    }
+
+    .title-bar .title {
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .title-bar .controls {
+      display: flex;
+      gap: 8px;
+      -webkit-app-region: no-drag;
+    }
+
+    .title-bar .btn {
+      width: 24px;
+      height: 24px;
+      border: none;
+      border-radius: 4px;
+      background: transparent;
+      color: #aaa;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .title-bar .btn:hover {
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+    }
+
+    .title-bar .btn.close:hover {
+      background: #e94560;
+      color: #fff;
+    }
+
+    /* ===== 内容区 ===== */
+    .content {
+      padding: 16px;
+    }
+
+    /* ===== 日历 ===== */
+    .calendar-section {
+      background: #fff;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    }
+
+    .calendar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .calendar-header .month-label {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1a1a2e;
+    }
+
+    .calendar-header .nav-btn {
+      width: 28px;
+      height: 28px;
+      border: none;
+      border-radius: 6px;
+      background: #f0f0f0;
+      cursor: pointer;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .calendar-header .nav-btn:hover {
+      background: #e0e0e0;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 2px;
+    }
+
+    .calendar-grid .weekday {
+      text-align: center;
+      font-size: 11px;
+      color: #999;
+      padding: 4px 0;
+      font-weight: 600;
+    }
+
+    .calendar-grid .day {
+      text-align: center;
+      font-size: 13px;
+      padding: 6px 0;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .calendar-grid .day:hover {
+      background: #f0f0f0;
+    }
+
+    .calendar-grid .day.today {
+      background: #e94560;
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .calendar-grid .day.other-month {
+      color: #ccc;
+    }
+
+    .calendar-grid .day.has-event::after {
+      content: '·';
+      display: block;
+      font-size: 16px;
+      line-height: 0;
+      color: #e94560;
+      margin-top: 2px;
+    }
+
+    /* ===== 设置区 ===== */
+    .settings-section {
+      background: #fff;
+      border-radius: 10px;
+      padding: 16px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    }
+
+    .settings-section h3 {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: #1a1a2e;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .setting-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .setting-row label {
+      font-size: 13px;
+      color: #555;
+      flex-shrink: 0;
+      width: 90px;
+    }
+
+    .setting-row input[type="text"],
+    .setting-row input[type="time"] {
+      flex: 1;
+      padding: 6px 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .setting-row input[type="text"]:focus,
+    .setting-row input[type="time"]:focus {
+      border-color: #e94560;
+    }
+
+    .setting-row input[type="color"] {
+      width: 40px;
+      height: 28px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .setting-row input[type="range"] {
+      flex: 1;
+      margin-left: 8px;
+    }
+
+    .setting-row .value-label {
+      font-size: 12px;
+      color: #999;
+      width: 36px;
+      text-align: right;
+    }
+
+    .setting-row .checkbox-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+    }
+
+    .setting-row input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      margin-right: 6px;
+      cursor: pointer;
+    }
+
+    .setting-row .checkbox-label {
+      font-size: 13px;
+      color: #666;
+    }
+
+    .save-btn {
+      width: 100%;
+      padding: 10px;
+      background: linear-gradient(135deg, #e94560, #c23152);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 16px;
+      transition: opacity 0.2s;
+    }
+
+    .save-btn:hover {
+      opacity: 0.9;
+    }
+
+    .save-btn:active {
+      transform: scale(0.98);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #1a1a2e;
+      color: #fff;
+      padding: 8px 20px;
+      border-radius: 20px;
+      font-size: 13px;
+      opacity: 0;
+      transition: all 0.3s;
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .info-bar {
+      background: #fff;
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .info-bar .clock {
+      font-size: 28px;
+      font-weight: 700;
+      color: #e94560;
+    }
+
+    .info-bar .info-text {
+      flex: 1;
+    }
+
+    .info-bar .info-text .custom-msg {
+      font-size: 13px;
+      color: #333;
+      margin-bottom: 2px;
+    }
+
+    .info-bar .info-text .checkin-status {
+      font-size: 11px;
+      color: #999;
+    }
+
+    .info-bar .info-text .checkin-status .ok {
+      color: #4ade80;
+    }
+
+    .info-bar .info-text .checkin-status .wait {
+      color: #fbbf24;
+    }
+
+    /* ===== 今日打卡 ===== */
+    .punch-section {
+      background: #fff;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    }
+
+    .punch-section h3 {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: #1a1a2e;
+    }
+
+    .punch-buttons {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .punch-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    .punch-btn.on {
+      background: linear-gradient(135deg, #4ade80, #22c55e);
+      color: #fff;
+    }
+
+    .punch-btn.off {
+      background: linear-gradient(135deg, #60a5fa, #3b82f6);
+      color: #fff;
+    }
+
+    .punch-btn:hover { opacity: 0.92; }
+    .punch-btn:active { transform: scale(0.98); }
+    .punch-btn:disabled {
+      background: #e5e5e5;
+      color: #aaa;
+      cursor: not-allowed;
+    }
+
+    .today-records {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .record-card {
+      flex: 1;
+      background: #f8f9fb;
+      border-radius: 8px;
+      padding: 10px 12px;
+      border: 1px solid #eef0f3;
+    }
+
+    .record-card .label {
+      font-size: 11px;
+      color: #999;
+      margin-bottom: 4px;
+    }
+
+    .record-card .time {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1a1a2e;
+    }
+
+    .record-card .time.empty {
+      color: #ccc;
+      font-weight: 500;
+    }
+
+    /* 可编辑的打卡时间输入框 */
+    .time-input {
+      width: 100%;
+      border: none;
+      background: transparent;
+      font-family: inherit;
+      font-size: 18px;
+      font-weight: 700;
+      color: #1a1a2e;
+      padding: 0;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .time-input::-webkit-calendar-picker-indicator {
+      opacity: 0.35;
+      cursor: pointer;
+    }
+
+    .time-input:focus {
+      background: #eef2ff;
+      border-radius: 4px;
+    }
+
+    .record-card .edit-hint {
+      font-size: 10px;
+      color: #bbb;
+      margin-top: 2px;
+    }
+
+    /* 推算下班 + 倒计时 */
+    .countdown-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #fff5f7;
+      border: 1px solid #ffe0e6;
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin-bottom: 12px;
+    }
+
+    .countdown-bar .cd-label {
+      font-size: 11px;
+      color: #b07a86;
+    }
+
+    .countdown-bar .cd-time {
+      font-size: 16px;
+      font-weight: 700;
+      color: #e94560;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .countdown-bar .cd-remain {
+      margin-left: auto;
+      font-size: 12px;
+      font-weight: 600;
+      color: #e94560;
+    }
+
+    .countdown-bar.done {
+      background: #f0fdf4;
+      border-color: #bbf7d0;
+    }
+    .countdown-bar.done .cd-time,
+    .countdown-bar.done .cd-remain {
+      color: #16a34a;
+    }
+
+    .record-card .badge {
+      display: inline-block;
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 8px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    .record-card .badge.manual { background: #e0e7ff; color: #3b82f6; }
+    .record-card .badge.dingtalk { background: #fef3c7; color: #d97706; }
+
+    .recent-list {
+      margin-top: 10px;
+      border-top: 1px solid #f0f0f0;
+      padding-top: 10px;
+    }
+
+    .recent-list .recent-title {
+      font-size: 12px;
+      color: #999;
+      margin-bottom: 8px;
+    }
+
+    .recent-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      padding: 4px 0;
+      color: #555;
+      border-bottom: 1px dashed #f3f3f3;
+    }
+
+    .recent-row:last-child { border-bottom: none; }
+    .recent-row .date { color: #888; }
+    .recent-row .times { font-variant-numeric: tabular-nums; }
+    .recent-row .times .missing { color: #ccc; }
+
+    .link-btn {
+      background: none;
+      border: none;
+      color: #e94560;
+      font-size: 12px;
+      cursor: pointer;
+      padding: 0;
+      margin-top: 8px;
+    }
+    .link-btn:hover { text-decoration: underline; }
+
+    /* ===== 钉钉同步配置 ===== */
+    .dingtalk-section {
+      background: #fff;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    }
+
+    .dingtalk-section h3 {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #1a1a2e;
+    }
+
+    .dingtalk-tip {
+      font-size: 11px;
+      color: #999;
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+
+    .dingtalk-tip a { color: #3b82f6; }
+
+    .sync-status {
+      font-size: 12px;
+      margin-top: 10px;
+      padding: 8px 10px;
+      border-radius: 6px;
+      background: #f8f9fb;
+    }
+    .sync-status.ok { color: #16a34a; }
+    .sync-status.err { color: #dc2626; }
+
+    .sync-btn {
+      width: 100%;
+      padding: 9px;
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 12px;
+    }
+    .sync-btn:hover { opacity: 0.92; }
+    .sync-btn:disabled { background: #cbd5e1; cursor: not-allowed; }
+
+    .setting-row input[type="password"] {
+      flex: 1;
+      padding: 6px 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+    }
+    .setting-row input[type="password"]:focus { border-color: #e94560; }
+
+    /* 弹性工作制 */
+    .inline-range {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .inline-range input[type="time"],
+    .inline-range input[type="number"] {
+      flex: 1;
+      padding: 6px 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .inline-range input[type="number"] {
+      max-width: 90px;
+    }
+
+    .inline-range .sep {
+      font-size: 12px;
+      color: #999;
+      flex-shrink: 0;
+    }
+
+    .derived {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 600;
+      color: #e94560;
+      background: #fff5f7;
+      border-radius: 6px;
+      padding: 6px 10px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <!-- 标题栏 -->
+  <div class="title-bar">
+    <span class="title">🖥️ 悬浮台历</span>
+    <div class="controls">
+      <button class="btn minimize" onclick="window.api.minimizeWindow()">—</button>
+      <button class="btn close" onclick="window.api.closeWindow()">✕</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- 顶部信息条 -->
+    <div class="info-bar">
+      <div class="clock" id="bigClock">--:--</div>
+      <div class="info-text">
+        <div class="custom-msg" id="customMsg"></div>
+        <div class="checkin-status" id="checkinStatus"></div>
+      </div>
+    </div>
+
+    <!-- 日历 -->
+    <div class="calendar-section">
+      <div class="calendar-header">
+        <button class="nav-btn" id="prevMonth">‹</button>
+        <span class="month-label" id="monthLabel"></span>
+        <button class="nav-btn" id="nextMonth">›</button>
+      </div>
+      <div class="calendar-grid" id="calendarGrid"></div>
+    </div>
+
+    <!-- 今日打卡 -->
+    <div class="punch-section">
+      <h3>⏱️ 今日打卡</h3>
+
+      <div class="today-records">
+        <div class="record-card">
+          <div class="label">上班 <span id="onBadge"></span></div>
+          <input type="time" class="time-input" id="onDutyInput">
+          <div class="edit-hint">点击可修改</div>
+        </div>
+        <div class="record-card">
+          <div class="label">下班 <span id="offBadge"></span></div>
+          <input type="time" class="time-input" id="offDutyInput">
+          <div class="edit-hint">点击可修改</div>
+        </div>
+      </div>
+
+      <div class="countdown-bar" id="countdownBar">
+        <span class="cd-label">按打卡推算可下班</span>
+        <span class="cd-time" id="cdTarget">--:--</span>
+        <span class="cd-remain" id="cdRemain"></span>
+      </div>
+
+      <div class="punch-buttons">
+        <button class="punch-btn on" id="punchOnBtn">上班打卡</button>
+        <button class="punch-btn off" id="punchOffBtn">下班打卡</button>
+      </div>
+
+      <button class="link-btn" id="clearBtn">清除今日记录</button>
+
+      <div class="recent-list">
+        <div class="recent-title">最近 7 天</div>
+        <div id="recentList"></div>
+      </div>
+    </div>
+
+    <!-- 钉钉自动同步 -->
+    <div class="dingtalk-section">
+      <h3>📡 钉钉打卡自动同步</h3>
+      <div class="dingtalk-tip">
+        需企业主管理员在
+        <a href="https://open.dingtalk.com/" target="_blank">钉钉开放平台</a>
+        创建「企业内部应用」，申请「考勤数据读权限」后填写下方信息。
+      </div>
+
+      <div class="setting-row">
+        <label>启用同步</label>
+        <div class="checkbox-wrap">
+          <input type="checkbox" id="dtEnabled">
+          <span class="checkbox-label">开启后自动拉取钉钉打卡时间</span>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <label>AppKey</label>
+        <input type="text" id="dtAppKey" placeholder="企业内部应用的 AppKey">
+      </div>
+
+      <div class="setting-row">
+        <label>AppSecret</label>
+        <input type="password" id="dtAppSecret" placeholder="应用的 AppSecret">
+      </div>
+
+      <div class="setting-row">
+        <label>UserId</label>
+        <input type="text" id="dtUserId" placeholder="你的钉钉 staffId / userId">
+      </div>
+
+      <div class="setting-row">
+        <label>自动同步</label>
+        <div class="checkbox-wrap">
+          <input type="checkbox" id="dtAutoSync">
+          <span class="checkbox-label">每</span>
+          <input type="number" id="dtInterval" min="1" max="120" style="width:48px;padding:4px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+          <span class="checkbox-label">分钟同步一次</span>
+        </div>
+      </div>
+
+      <button class="sync-btn" id="syncNowBtn">立即同步今天</button>
+      <div class="sync-status" id="syncStatus" style="display:none;"></div>
+    </div>
+
+    <!-- 设置 -->
+    <div class="settings-section">
+      <h3>⚙️ 悬浮窗设置</h3>
+
+      <div class="setting-row">
+        <label>自定义文字</label>
+        <input type="text" id="customTextInput" placeholder="输入一句话..." maxlength="50">
+      </div>
+
+      <div class="setting-row">
+        <label>弹性工作制</label>
+        <div class="checkbox-wrap">
+          <input type="checkbox" id="flexEnabled">
+          <span class="checkbox-label">按弹性上下班自动推算</span>
+        </div>
+      </div>
+
+      <div id="flexFields">
+        <div class="setting-row">
+          <label>上班弹性</label>
+          <div class="inline-range">
+            <input type="time" id="flexStartBegin">
+            <span class="sep">—</span>
+            <input type="time" id="flexStartEnd">
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <label>工作时长</label>
+          <div class="inline-range">
+            <input type="number" id="flexWorkHours" step="0.5" min="1" max="16">
+            <span class="sep">小时</span>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <label>下班弹性</label>
+          <span class="derived" id="flexOffWindow">18:00 — 18:30</span>
+        </div>
+      </div>
+
+      <div id="fixedFields" style="display:none;">
+        <div class="setting-row">
+          <label>上班时间</label>
+          <input type="time" id="checkInInput">
+        </div>
+
+        <div class="setting-row">
+          <label>下班时间</label>
+          <input type="time" id="checkOutInput">
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <label>背景色</label>
+        <input type="color" id="bgColorInput" value="#1a1a2e">
+      </div>
+
+      <div class="setting-row">
+        <label>文字颜色</label>
+        <input type="color" id="textColorInput" value="#ffffff">
+      </div>
+
+      <div class="setting-row">
+        <label>强调色</label>
+        <input type="color" id="accentColorInput" value="#ff5d7a">
+      </div>
+
+      <div class="setting-row">
+        <label>透明度</label>
+        <input type="range" id="opacityInput" min="0.3" max="1" step="0.05" value="0.88">
+        <span class="value-label" id="opacityValue">88%</span>
+      </div>
+
+      <div class="setting-row">
+        <label>显示秒数</label>
+        <div class="checkbox-wrap">
+          <input type="checkbox" id="showSecondsInput">
+          <span class="checkbox-label">在时间中显示秒</span>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <label>显示日期</label>
+        <div class="checkbox-wrap">
+          <input type="checkbox" id="showDateInput">
+          <span class="checkbox-label">显示日期和星期</span>
+        </div>
+      </div>
+
+      <button class="save-btn" id="saveBtn">💾 保存设置</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">已保存 ✓</div>
+
+  <script src="flex.js"></script>
+  <script>
+    let config = {};
+    let calendarDate = new Date();
+    let todayRecords = { onDuty: null, offDuty: null, source: null };
+
+    // 初始化
+    async function init() {
+      config = await window.api.getConfig();
+      const dt = config.dingtalk || {};
+
+      // 填充表单
+      document.getElementById('customTextInput').value = config.customText || '';
+      document.getElementById('checkInInput').value = config.checkInTime || '09:00';
+      document.getElementById('checkOutInput').value = config.checkOutTime || '18:00';
+      document.getElementById('bgColorInput').value = config.bgColor || '#1a1a2e';
+      document.getElementById('textColorInput').value = config.textColor || '#e0e0e0';
+      document.getElementById('accentColorInput').value = config.accentColor || '#e94560';
+      document.getElementById('opacityInput').value = config.opacity || 0.85;
+      document.getElementById('opacityValue').textContent = Math.round((config.opacity || 0.85) * 100) + '%';
+      document.getElementById('showSecondsInput').checked = config.showSeconds !== false;
+      document.getElementById('showDateInput').checked = config.showDate !== false;
+
+      // 弹性工作制
+      const fx = Flex.cfgOf(config);
+      document.getElementById('flexEnabled').checked = fx.enabled;
+      document.getElementById('flexStartBegin').value = fx.startBegin;
+      document.getElementById('flexStartEnd').value = fx.startEnd;
+      document.getElementById('flexWorkHours').value = (fx.workMinutes / 60).toFixed(1).replace(/\.0$/, '');
+      toggleFlexFields();
+      updateFlexOffWindow();
+
+      // 钉钉配置
+      document.getElementById('dtEnabled').checked = !!dt.enabled;
+      document.getElementById('dtAppKey').value = dt.appKey || '';
+      document.getElementById('dtAppSecret').value = dt.appSecret || '';
+      document.getElementById('dtUserId').value = dt.userId || '';
+      document.getElementById('dtAutoSync').checked = dt.autoSync !== false;
+      document.getElementById('dtInterval').value = dt.syncIntervalMin || 10;
+
+      // 打卡记录
+      try {
+        todayRecords = await window.api.getRecords();
+      } catch (e) {
+        todayRecords = { onDuty: null, offDuty: null, source: null };
+      }
+      renderTodayRecords();
+      renderRecent();
+
+      // 更新信息条
+      updateInfoBar();
+      setInterval(updateInfoBar, 1000);
+
+      // 渲染日历
+      renderCalendar();
+
+      // 监听打卡记录变化
+      window.api.onRecordsUpdated((rec) => {
+        todayRecords = rec;
+        renderTodayRecords();
+        renderRecent();
+      });
+
+      // 监听钉钉同步状态
+      window.api.onSyncStatus((status) => {
+        const el = document.getElementById('syncStatus');
+        el.style.display = 'block';
+        el.className = 'sync-status ' + (status.ok ? 'ok' : 'err');
+        el.textContent = (status.ok ? '✓ ' : '✕ ') + status.text;
+      });
+    }
+
+    // 更新顶部信息条（显示真实打卡时间）
+    function updateInfoBar() {
+      const now = new Date();
+      const h = String(now.getHours()).padStart(2, '0');
+      const m = String(now.getMinutes()).padStart(2, '0');
+      const s = String(now.getSeconds()).padStart(2, '0');
+
+      document.getElementById('bigClock').textContent =
+        config.showSeconds !== false ? `${h}:${m}:${s}` : `${h}:${m}`;
+      document.getElementById('customMsg').textContent = config.customText || '';
+
+      const realIn = todayRecords.onDuty;
+      const realOut = todayRecords.offDuty;
+      const target = Flex.computeOffDuty(realIn, config);
+      const late = realIn ? Flex.isLate(realIn, config) : false;
+
+      const inClass = realIn ? (late ? 'wait' : 'ok') : 'wait';
+      const outClass = realOut ? 'ok' : 'wait';
+
+      document.getElementById('checkinStatus').innerHTML =
+        `<span class="${inClass}">${realIn ? '✓' : '○'} 上班 ${realIn || '未打卡'}${late ? ' (迟到)' : ''}</span> · ` +
+        `<span class="${outClass}">${realOut ? '✓' : '○'} 下班 ${realOut || target}</span>`;
+
+      updateCountdown();
+    }
+
+    // 推算下班时间 + 倒计时
+    function updateCountdown() {
+      const bar = document.getElementById('countdownBar');
+      const targetEl = document.getElementById('cdTarget');
+      const remainEl = document.getElementById('cdRemain');
+
+      const realIn = todayRecords.onDuty;
+      const realOut = todayRecords.offDuty;
+      const target = Flex.computeOffDuty(realIn, config);
+      targetEl.textContent = target;
+
+      if (realOut) {
+        bar.classList.add('done');
+        remainEl.textContent = '已下班 ✓';
+        return;
+      }
+      const sec = Flex.remainingSeconds(realIn, config, new Date());
+      if (sec != null && sec <= 0) {
+        bar.classList.add('done');
+        remainEl.textContent = '可以下班了 🎉';
+      } else {
+        bar.classList.remove('done');
+        remainEl.textContent = Flex.formatRemain(sec);
+      }
+    }
+
+    // 渲染今日打卡卡片（时间框可直接编辑）
+    function renderTodayRecords() {
+      const onInput = document.getElementById('onDutyInput');
+      const offInput = document.getElementById('offDutyInput');
+      const onBadge = document.getElementById('onBadge');
+      const offBadge = document.getElementById('offBadge');
+
+      // 正在编辑的输入框不要被刷新覆盖
+      if (document.activeElement !== onInput) onInput.value = todayRecords.onDuty || '';
+      if (document.activeElement !== offInput) offInput.value = todayRecords.offDuty || '';
+
+      const badge = todayRecords.source === 'dingtalk'
+        ? '<span class="badge dingtalk">钉钉</span>'
+        : '<span class="badge manual">手动</span>';
+      onBadge.innerHTML = todayRecords.onDuty ? badge : '';
+      offBadge.innerHTML = todayRecords.offDuty ? badge : '';
+
+      // 已打卡则禁用对应按钮
+      document.getElementById('punchOnBtn').disabled = !!todayRecords.onDuty;
+      document.getElementById('punchOffBtn').disabled = !!todayRecords.offDuty;
+
+      updateCountdown();
+    }
+
+    // 渲染最近 7 天
+    async function renderRecent() {
+      let list = [];
+      try {
+        list = await window.api.getRecentRecords(7);
+      } catch (e) {
+        list = [];
+      }
+      const wrap = document.getElementById('recentList');
+      wrap.innerHTML = '';
+      for (const r of list) {
+        const row = document.createElement('div');
+        row.className = 'recent-row';
+        const onTxt = r.onDuty || '<span class="missing">—</span>';
+        const offTxt = r.offDuty || '<span class="missing">—</span>';
+        row.innerHTML =
+          `<span class="date">${r.date.slice(5)}</span>` +
+          `<span class="times">上 ${onTxt} · 下 ${offTxt}</span>`;
+        wrap.appendChild(row);
+      }
+    }
+
+    // 打卡按钮
+    document.getElementById('punchOnBtn').addEventListener('click', async () => {
+      todayRecords = await window.api.recordPunch('onDuty');
+      renderTodayRecords();
+      renderRecent();
+      toast('已记录上班打卡 ' + todayRecords.onDuty);
+    });
+
+    document.getElementById('punchOffBtn').addEventListener('click', async () => {
+      todayRecords = await window.api.recordPunch('offDuty');
+      renderTodayRecords();
+      renderRecent();
+      toast('已记录下班打卡 ' + todayRecords.offDuty);
+    });
+
+    document.getElementById('clearBtn').addEventListener('click', async () => {
+      if (!confirm('确定清除今天的打卡记录？')) return;
+      todayRecords = await window.api.clearTodayRecords();
+      renderTodayRecords();
+      renderRecent();
+      toast('已清除今日记录');
+    });
+
+    // 手动编辑打卡时间
+    document.getElementById('onDutyInput').addEventListener('change', async (e) => {
+      todayRecords = await window.api.setRecordTime('onDuty', e.target.value);
+      renderTodayRecords();
+      renderRecent();
+      toast(e.target.value ? '上班时间已改为 ' + e.target.value : '已清除上班时间');
+    });
+
+    document.getElementById('offDutyInput').addEventListener('change', async (e) => {
+      todayRecords = await window.api.setRecordTime('offDuty', e.target.value);
+      renderTodayRecords();
+      renderRecent();
+      toast(e.target.value ? '下班时间已改为 ' + e.target.value : '已清除下班时间');
+    });
+
+    // 弹性工作制：切换显示 + 实时推算下班窗口
+    function toggleFlexFields() {
+      const enabled = document.getElementById('flexEnabled').checked;
+      document.getElementById('flexFields').style.display = enabled ? '' : 'none';
+      document.getElementById('fixedFields').style.display = enabled ? 'none' : '';
+    }
+
+    function updateFlexOffWindow() {
+      const begin = document.getElementById('flexStartBegin').value || '08:30';
+      const end = document.getElementById('flexStartEnd').value || '09:00';
+      const hours = parseFloat(document.getElementById('flexWorkHours').value) || 9.5;
+      const mins = Math.round(hours * 60);
+      const from = Flex.toHHmm(Flex.toMin(begin) + mins);
+      const to = Flex.toHHmm(Flex.toMin(end) + mins);
+      document.getElementById('flexOffWindow').textContent = `${from} — ${to}`;
+    }
+
+    document.getElementById('flexEnabled').addEventListener('change', toggleFlexFields);
+    ['flexStartBegin', 'flexStartEnd', 'flexWorkHours'].forEach((id) => {
+      document.getElementById(id).addEventListener('input', updateFlexOffWindow);
+    });
+
+    // 立即同步钉钉
+    document.getElementById('syncNowBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('syncNowBtn');
+      btn.disabled = true;
+      btn.textContent = '同步中...';
+      try {
+        const res = await window.api.syncDingtalk();
+        if (!res.ok) {
+          const el = document.getElementById('syncStatus');
+          el.style.display = 'block';
+          el.className = 'sync-status err';
+          el.textContent = '✕ ' + (res.error || '同步失败');
+        }
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '立即同步今天';
+      }
+    });
+
+    function toast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg + ' ✓';
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 1500);
+    }
+
+    // 渲染日历
+    function renderCalendar() {
+      const year = calendarDate.getFullYear();
+      const month = calendarDate.getMonth();
+
+      const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+      document.getElementById('monthLabel').textContent = `${year}年 ${monthNames[month]}`;
+
+      const grid = document.getElementById('calendarGrid');
+      grid.innerHTML = '';
+
+      // 星期标题
+      const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+      weekdays.forEach(w => {
+        const el = document.createElement('div');
+        el.className = 'weekday';
+        el.textContent = w;
+        grid.appendChild(el);
+      });
+
+      // 获取当月第一天
+      const firstDay = new Date(year, month, 1);
+      const firstDayOfWeek = firstDay.getDay();
+
+      // 上个月的尾部
+      const prevMonthLastDay = new Date(year, month, 0).getDate();
+      for (let i = firstDayOfWeek - 1; i >= 0; i--) {
+        const el = createDayCell(prevMonthLastDay - i, true);
+        grid.appendChild(el);
+      }
+
+      // 当月
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const today = new Date();
+      for (let d = 1; d <= daysInMonth; d++) {
+        const isToday = d === today.getDate() &&
+          month === today.getMonth() &&
+          year === today.getFullYear();
+        const el = createDayCell(d, false, isToday);
+        grid.appendChild(el);
+      }
+
+      // 下个月开头（补满 6 行 = 42 格）
+      const totalCells = grid.children.length - 7; // 减去星期标题
+      const remaining = 42 - totalCells;
+      for (let d = 1; d <= remaining; d++) {
+        const el = createDayCell(d, true);
+        grid.appendChild(el);
+      }
+    }
+
+    function createDayCell(day, otherMonth, isToday) {
+      const el = document.createElement('div');
+      el.className = 'day';
+      if (otherMonth) el.classList.add('other-month');
+      if (isToday) el.classList.add('today');
+      el.textContent = day;
+      return el;
+    }
+
+    // 月份切换
+    document.getElementById('prevMonth').addEventListener('click', () => {
+      calendarDate.setMonth(calendarDate.getMonth() - 1);
+      renderCalendar();
+    });
+
+    document.getElementById('nextMonth').addEventListener('click', () => {
+      calendarDate.setMonth(calendarDate.getMonth() + 1);
+      renderCalendar();
+    });
+
+    // 透明度滑块实时显示
+    document.getElementById('opacityInput').addEventListener('input', (e) => {
+      document.getElementById('opacityValue').textContent = Math.round(e.target.value * 100) + '%';
+    });
+
+    // 保存设置
+    document.getElementById('saveBtn').addEventListener('click', async () => {
+      const flexEnabled = document.getElementById('flexEnabled').checked;
+      const startBegin = document.getElementById('flexStartBegin').value || '08:30';
+      const startEnd = document.getElementById('flexStartEnd').value || '09:00';
+      const workMinutes = Math.round(
+        (parseFloat(document.getElementById('flexWorkHours').value) || 9.5) * 60
+      );
+      const offFrom = Flex.toHHmm(Flex.toMin(startBegin) + workMinutes);
+
+      const newConfig = {
+        customText: document.getElementById('customTextInput').value,
+        // 弹性模式：最晚上班 = 弹性结束；最早下班 = 弹性开始 + 工作时长
+        checkInTime: flexEnabled ? startEnd : (document.getElementById('checkInInput').value || '09:00'),
+        checkOutTime: flexEnabled ? offFrom : (document.getElementById('checkOutInput').value || '18:00'),
+        flex: { enabled: flexEnabled, startBegin, startEnd, workMinutes },
+        bgColor: document.getElementById('bgColorInput').value,
+        textColor: document.getElementById('textColorInput').value,
+        accentColor: document.getElementById('accentColorInput').value,
+        opacity: parseFloat(document.getElementById('opacityInput').value),
+        showSeconds: document.getElementById('showSecondsInput').checked,
+        showDate: document.getElementById('showDateInput').checked,
+        dingtalk: {
+          enabled: document.getElementById('dtEnabled').checked,
+          appKey: document.getElementById('dtAppKey').value.trim(),
+          appSecret: document.getElementById('dtAppSecret').value.trim(),
+          userId: document.getElementById('dtUserId').value.trim(),
+          autoSync: document.getElementById('dtAutoSync').checked,
+          syncIntervalMin: Number(document.getElementById('dtInterval').value) || 10,
+        },
+      };
+
+      config = await window.api.saveConfig(newConfig);
+      updateInfoBar();
+
+      // 显示 toast
+      const toast = document.getElementById('toast');
+      toast.textContent = '已保存 ✓';
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 1500);
+    });
+
+    init();
+  </script>
+</body>
+</html>

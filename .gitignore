@@ -1,0 +1,20 @@
+# 依赖
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# 运行时生成的截图（保留 docs/ 里的正式截图）
+.preview/*.png
+
+# 系统文件
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 编辑器
+.vscode/
+.idea/
+
+# 本地配置（正常存在 userData，防止误放项目目录）
+config.json
+records.json
