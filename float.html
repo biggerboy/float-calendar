@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>悬浮台历</title>
   <style>
+    :root {
+      --text-color: #ffffff;
+      --accent-color: #ff5d7a;
+      --bg-color: rgba(26, 26, 46, 0.88);
+      --bg-color-hover: rgba(26, 26, 46, 1);
+      --mono: "Cascadia Mono", "Consolas", "SFMono-Regular", Menlo, monospace;
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -14,106 +22,112 @@
 
     body {
       overflow: hidden;
-      font-family: 'Microsoft YaHei UI', 'Segoe UI', sans-serif;
+      font-family: "Microsoft YaHei UI", "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
     }
 
     .float-container {
       width: 220px;
       height: 140px;
-      border-radius: 12px;
+      padding: 12px 16px;
+      border-radius: 10px;
       /* 半透明只作用在背景色上，不作用在整层 DOM 上，避免 Windows 透明窗口 GPU 合成错乱 */
       background: var(--bg-color, rgba(26, 26, 46, 0.88));
       color: var(--text-color, #ffffff);
+      border: 1px solid rgba(255, 255, 255, 0.08);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 10px 12px;
+      gap: 4px;
       cursor: pointer;
       transition: background 0.2s ease, transform 0.15s ease;
       -webkit-app-region: drag; /* 允许拖动 */
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
       overflow: hidden;
     }
 
     .float-container:hover {
       background: var(--bg-color-hover, rgba(26, 26, 46, 1));
-      transform: scale(1.02);
+      transform: scale(1.01);
     }
 
-    .float-container:active {
-      transform: scale(0.98);
-    }
+    .float-container:active { transform: scale(0.99); }
 
     .time-line {
+      font-family: var(--mono);
       font-size: 24px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      line-height: 1.2;
+      font-weight: 600;
+      line-height: 1.15;
+      letter-spacing: 0.5px;
       flex-shrink: 0;
       color: var(--accent-color, #ff5d7a);
+      font-variant-numeric: tabular-nums;
     }
 
     .date-line {
       font-size: 12px;
-      line-height: 1.3;
-      margin-top: 3px;
+      font-weight: 500;
+      line-height: 1.2;
+      letter-spacing: 0.3px;
       flex-shrink: 0;
       color: var(--text-color, #ffffff);
-      font-weight: 600;
+      opacity: 0.72;
     }
 
     .custom-text {
-      font-size: 13px;
-      line-height: 1.3;
-      margin-top: 5px;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.2;
       flex-shrink: 0;
       text-align: center;
-      max-width: 196px;
+      max-width: 188px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
       color: var(--text-color, #ffffff);
-      font-weight: 700;
-      letter-spacing: 0.5px;
+      opacity: 0.92;
     }
 
     .checkin-line {
-      font-size: 11px;
-      line-height: 1.3;
-      margin-top: 3px;
+      display: flex;
+      gap: 8px;
+      font-size: 13px;
+      line-height: 1.2;
       flex-shrink: 0;
-      font-weight: 700;
-      letter-spacing: 0.3px;
       color: var(--text-color, #ffffff);
+      font-variant-numeric: tabular-nums;
     }
 
     .checkin-line .done {
-      color: #7dffc0;
+      color: var(--text-color, #ffffff);
+      opacity: 0.95;
+      font-weight: 600;
     }
 
     .checkin-line .pending {
-      color: #ffd76a;
+      color: var(--text-color, #ffffff);
+      opacity: 0.5;
     }
 
     .checkin-line .late {
-      color: #ff9f7a;
+      color: var(--accent-color, #ff5d7a);
+      font-weight: 600;
     }
 
     .countdown-line {
-      font-size: 13px;
-      line-height: 1.3;
-      margin-top: 3px;
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.2;
+      letter-spacing: 0.2px; font-size: 14px;
       flex-shrink: 0;
-      font-weight: 700;
-      letter-spacing: 0.3px;
       color: var(--accent-color, #ff5d7a);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
     }
 
-    .countdown-line.done {
-      color: #7dffc0;
-    }
+    .countdown-line.done { color: var(--text-color, #ffffff); }
 
     /* 调整大小指示器（右下角小三角） */
     .drag-hint {
@@ -121,10 +135,11 @@
       bottom: 2px;
       right: 6px;
       font-size: 8px;
-      opacity: 0.3;
+      opacity: 0.25;
       -webkit-app-region: no-drag;
       pointer-events: none;
     }
+  
   </style>
 </head>
 <body>
@@ -153,6 +168,7 @@
       applyConfig();
       updateClock();
       setInterval(updateClock, 1000);
+      startCountdownLoop();
 
       // 监听配置更新
       window.api.onConfigUpdated((newConfig) => {
@@ -214,7 +230,6 @@
 
     function updateCheckin() {
       const checkInEl = document.getElementById('checkinDisplay');
-      const cdEl = document.getElementById('countdownDisplay');
 
       const actualIn = todayRecords.onDuty;
       const actualOut = todayRecords.offDuty;
@@ -231,20 +246,48 @@
         `<span class="${inClass}">${inIcon}上班 ${actualIn || '未打卡'}</span> ` +
         `<span class="${outClass}">${outIcon}下班 ${actualOut || target}</span>`;
 
-      // 距下班倒计时
-      if (actualOut) {
-        cdEl.textContent = '已下班 ✓';
-        cdEl.className = 'countdown-line done';
-        return;
-      }
-      const sec = Flex.remainingSeconds(actualIn, config, new Date());
-      if (sec != null && sec <= 0) {
-        cdEl.textContent = '🎉 可以下班了';
-        cdEl.className = 'countdown-line done';
+      updateCountdown();
+    }
+
+    // 距下班倒计时（精确到毫秒，由 rAF 每帧驱动）
+    let lastCdText = null;
+    function updateCountdown() {
+      const cdEl = document.getElementById('countdownDisplay');
+      let text;
+      let cls = 'countdown-line';
+
+      if (todayRecords.offDuty) {
+        text = '已下班 ✓';
+        cls = 'countdown-line done';
       } else {
-        cdEl.textContent = '距下班 ' + Flex.formatRemain(sec).replace('还有 ', '');
-        cdEl.className = 'countdown-line';
+        const ms = Flex.remainingMilliseconds(todayRecords.onDuty, config, new Date());
+        if (ms == null) {
+          text = '';
+        } else if (ms <= 0) {
+          text = '🎉 可以下班了';
+          cls = 'countdown-line done';
+        } else {
+          text = '距下班 ' + Flex.formatRemainMs(ms).replace(/\.\d+$/, '' );
+        }
       }
+
+      // 文本没变就不动 DOM，减少每帧开销
+      if (text !== lastCdText) {
+        cdEl.textContent = text;
+        lastCdText = text;
+      }
+      if (cdEl.className !== cls) cdEl.className = cls;
+    }
+
+    // 毫秒级刷新循环（窗口隐藏时浏览器会自动降频）
+    let cdRafId = null;
+    function startCountdownLoop() {
+      if (cdRafId != null) return;
+      const loop = () => {
+        updateCountdown();
+        cdRafId = requestAnimationFrame(loop);
+      };
+      cdRafId = requestAnimationFrame(loop);
     }
 
     // 点击展开主窗口（区分点击和拖动）

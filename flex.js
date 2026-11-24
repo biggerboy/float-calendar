@@ -60,14 +60,42 @@
     return t != null && end != null && t > end;
   }
 
-  // 距离可下班还剩多少秒（负数表示已过点）
-  function remainingSeconds(onDutyHHmm, config, now) {
+  // 距离可下班还剩多少毫秒（负数表示已过点）
+  // 目标时间是整分钟的第 0 秒 0 毫秒（18:01 → 18:01:00.000）
+  function remainingMilliseconds(onDutyHHmm, config, now) {
     const target = computeOffDuty(onDutyHHmm, config);
     const tm = toMin(target);
     if (tm == null) return null;
     const n = now || new Date();
-    const nowSec = n.getHours() * 3600 + n.getMinutes() * 60 + n.getSeconds();
-    return tm * 60 - nowSec;
+    const nowMs =
+      n.getHours() * 3600000 +
+      n.getMinutes() * 60000 +
+      n.getSeconds() * 1000 +
+      n.getMilliseconds();
+    return tm * 60000 - nowMs;
+  }
+
+  // 距离可下班还剩多少秒（负数表示已过点）
+  function remainingSeconds(onDutyHHmm, config, now) {
+    const ms = remainingMilliseconds(onDutyHHmm, config, now);
+    return ms == null ? null : Math.floor(ms / 1000);
+  }
+
+  // 毫秒格式化成 “02:37:12.483”（时:分:秒.毫秒）
+  function formatRemainMs(ms) {
+    if (ms == null) return '';
+    if (ms <= 0) return '可以下班了';
+    const total = Math.floor(ms);
+    const h = Math.floor(total / 3600000);
+    const m = Math.floor((total % 3600000) / 60000);
+    const s = Math.floor((total % 60000) / 1000);
+    const milli = total % 1000;
+    return (
+      String(h).padStart(2, '0') +
+      ':' + String(m).padStart(2, '0') +
+      ':' + String(s).padStart(2, '0') +
+      '.' + String(milli).padStart(3, '0')
+    );
   }
 
   // 把秒数格式化成 “2小时29分” / “45秒”
@@ -89,7 +117,9 @@
     computeOffDuty,
     offDutyWindow,
     isLate,
+    remainingMilliseconds,
     remainingSeconds,
+    formatRemainMs,
     formatRemain,
   };
 })();

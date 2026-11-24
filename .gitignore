@@ -3,8 +3,15 @@ node_modules/
 npm-debug.log*
 yarn-error.log*
 
-# 运行时生成的截图（保留 docs/ 里的正式截图）
-.preview/*.png
+# 打包产物
+dist/
+release/
+
+# 开发临时目录（渲染脚本已单独纳入版本控制，其余脚本、日志与截图忽略）
+.preview/
+
+# 改动前的文件备份（本地保留，不进版本库）
+backup/
 
 # 系统文件
 .DS_Store

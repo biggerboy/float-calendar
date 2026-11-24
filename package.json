@@ -1,16 +1,80 @@
 {
   "name": "float-calendar",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "桌面悬浮台历 - 自定义文字、打卡时间、可拖动悬浮窗",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "dev": "electron . --dev"
+    "dev": "electron . --dev",
+    "icon": "electron .preview/gen-icon.js",
+    "build": "electron-builder --win",
+    "build:dir": "electron-builder --win --dir"
   },
-  "keywords": ["electron", "desktop-widget", "floating-clock", "calendar", "attendance", "dingtalk"],
+  "keywords": [
+    "electron",
+    "desktop-widget",
+    "floating-clock",
+    "calendar",
+    "attendance",
+    "dingtalk"
+  ],
   "author": "biggerboy",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^33.0.0"
+    "electron": "^33.0.0",
+    "electron-builder": "^26.18.0"
+  },
+  "build": {
+    "appId": "com.biggerboy.floatcalendar",
+    "productName": "FloatCalendar",
+    "copyright": "Copyright © 2026 biggerboy",
+    "compression": "maximum",
+    "electronLanguages": [
+      "zh-CN",
+      "en-US"
+    ],
+    "directories": {
+      "output": "dist",
+      "buildResources": "assets"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "records.js",
+      "dingtalk.js",
+      "flex.js",
+      "float.html",
+      "main.html",
+      "assets/**/*"
+    ],
+    "win": {
+      "icon": "assets/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "悬浮台历",
+      "artifactName": "FloatCalendar-Setup-${version}.exe"
+    },
+    "portable": {
+      "artifactName": "FloatCalendar-Portable-${version}.exe"
+    }
   }
 }

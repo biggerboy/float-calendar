@@ -24,6 +24,10 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.on('dingtalk:status', (event, status) => callback(status));
   },
 
+  // 开机自启
+  getAutoLaunch: () => ipcRenderer.invoke('autolaunch:get'),
+  setAutoLaunch: (enabled) => ipcRenderer.invoke('autolaunch:set', enabled),
+
   // 悬浮窗操作
   expand: () => ipcRenderer.invoke('float:expand'),
 

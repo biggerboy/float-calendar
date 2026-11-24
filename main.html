@@ -5,6 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>悬浮台历 - 设置</title>
   <style>
+    :root {
+      --primary: #e0455a;
+      --primary-hover: #c9354a;
+      --primary-soft: #fdeef0;
+      --bg: #f4f5f7;
+      --surface: #ffffff;
+      --border: #e6e8ee;
+      --divider: #f0f2f5;
+      --text: #1c2027;
+      --text-2: #5b6472;
+      --text-3: #98a0ac;
+      --radius: 10px;
+      --space: 16px;
+      --space-sm: 12px;
+      --mono: "Cascadia Mono", "Consolas", "SFMono-Regular", Menlo, monospace;
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -17,12 +34,18 @@
     }
 
     body {
-      font-family: 'Microsoft YaHei UI', 'Segoe UI', sans-serif;
-      background: #f5f5f5;
-      color: #333;
+      font-family: "Microsoft YaHei UI", "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
       overflow-y: auto;
       padding-top: 36px; /* 给固定标题栏留出空间 */
+      -webkit-font-smoothing: antialiased;
     }
+
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-thumb { background: #d9dde4; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #c6cbd4; }
+    ::-webkit-scrollbar-track { background: transparent; }
 
     /* ===== 标题栏 ===== */
     .title-bar {
@@ -33,25 +56,25 @@
       z-index: 100;
       height: 36px;
       flex-shrink: 0;
-      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      background: #17191f;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 12px;
+      padding: 0 var(--space-sm);
       -webkit-app-region: drag;
       cursor: default;
-      box-shadow: 0 1px 6px rgba(0, 0, 0, 0.18);
     }
 
     .title-bar .title {
-      color: #fff;
+      color: #f2f3f5;
       font-size: 13px;
       font-weight: 600;
+      letter-spacing: 0.3px;
     }
 
     .title-bar .controls {
       display: flex;
-      gap: 8px;
+      gap: 4px;
       -webkit-app-region: no-drag;
     }
 
@@ -59,66 +82,118 @@
       width: 24px;
       height: 24px;
       border: none;
-      border-radius: 4px;
+      border-radius: 6px;
       background: transparent;
-      color: #aaa;
+      color: #8b909b;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 13px;
+      line-height: 1;
       display: flex;
       align-items: center;
       justify-content: center;
     }
 
     .title-bar .btn:hover {
-      background: rgba(255, 255, 255, 0.15);
-      color: #fff;
+      background: rgba(255, 255, 255, 0.1);
+      color: #ffffff;
     }
 
     .title-bar .btn.close:hover {
-      background: #e94560;
-      color: #fff;
+      background: var(--primary);
+      color: #ffffff;
     }
 
     /* ===== 内容区 ===== */
-    .content {
-      padding: 16px;
+    .content { padding: var(--space); }
+
+    /* 所有区块共用同一层面板：1px 描边、无阴影，不再层层套卡片 */
+    .info-bar,
+    .calendar-section,
+    .punch-section,
+    .dingtalk-section,
+    .settings-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: var(--space);
+      margin-bottom: var(--space);
+      box-shadow: none;
     }
+
+    /* ===== 顶部信息条 ===== */
+    .info-bar {
+      display: flex;
+      align-items: center;
+      gap: var(--space);
+    }
+
+    .info-bar .clock {
+      font-family: var(--mono);
+      font-size: 26px;
+      font-weight: 600;
+      line-height: 1;
+      letter-spacing: 0.5px;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .info-bar .info-text {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .info-bar .info-text .custom-msg {
+      font-size: 13px;
+      color: var(--text);
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .info-bar .info-text .checkin-status {
+      font-size: 11px;
+      color: var(--text-3);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .info-bar .info-text .checkin-status .ok {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .info-bar .info-text .checkin-status .wait { color: var(--text-3); }
 
     /* ===== 日历 ===== */
-    .calendar-section {
-      background: #fff;
-      border-radius: 10px;
-      padding: 16px;
-      margin-bottom: 16px;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-    }
-
     .calendar-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 12px;
+      margin-bottom: var(--space-sm);
     }
 
     .calendar-header .month-label {
-      font-size: 16px;
-      font-weight: 700;
-      color: #1a1a2e;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: 0.2px;
     }
 
     .calendar-header .nav-btn {
       width: 28px;
       height: 28px;
-      border: none;
-      border-radius: 6px;
-      background: #f0f0f0;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--text-2);
       cursor: pointer;
       font-size: 14px;
-      color: #555;
+      line-height: 1;
     }
 
     .calendar-header .nav-btn:hover {
-      background: #e0e0e0;
+      background: #f5f6f9;
+      color: var(--text);
     }
 
     .calendar-grid {
@@ -130,7 +205,7 @@
     .calendar-grid .weekday {
       text-align: center;
       font-size: 11px;
-      color: #999;
+      color: var(--text-3);
       padding: 4px 0;
       font-weight: 600;
     }
@@ -139,358 +214,115 @@
       text-align: center;
       font-size: 13px;
       padding: 6px 0;
-      border-radius: 6px;
+      border-radius: 8px;
       cursor: pointer;
-      transition: background 0.15s;
+      transition: background 0.15s ease;
+      font-variant-numeric: tabular-nums;
     }
 
-    .calendar-grid .day:hover {
-      background: #f0f0f0;
-    }
+    .calendar-grid .day:hover { background: #f2f3f6; }
 
     .calendar-grid .day.today {
-      background: #e94560;
-      color: #fff;
-      font-weight: 700;
+      background: var(--primary);
+      color: #ffffff;
+      font-weight: 600;
     }
 
-    .calendar-grid .day.other-month {
-      color: #ccc;
-    }
+    .calendar-grid .day.other-month { color: #c9cdd5; }
 
     .calendar-grid .day.has-event::after {
-      content: '·';
+      content: "";
       display: block;
-      font-size: 16px;
-      line-height: 0;
-      color: #e94560;
-      margin-top: 2px;
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: var(--primary);
+      margin: 2px auto 0;
     }
 
-    /* ===== 设置区 ===== */
-    .settings-section {
-      background: #fff;
-      border-radius: 10px;
-      padding: 16px;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-    }
-
-    .settings-section h3 {
-      font-size: 14px;
-      font-weight: 700;
-      margin-bottom: 12px;
-      color: #1a1a2e;
+    /* ===== 区块标题 ===== */
+    .punch-section h3,
+    .settings-section h3,
+    .dingtalk-section h3 {
       display: flex;
       align-items: center;
-      gap: 6px;
-    }
-
-    .setting-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 14px;
-    }
-
-    .setting-row:last-child {
-      margin-bottom: 0;
-    }
-
-    .setting-row label {
+      gap: 8px;
       font-size: 13px;
-      color: #555;
-      flex-shrink: 0;
-      width: 90px;
-    }
-
-    .setting-row input[type="text"],
-    .setting-row input[type="time"] {
-      flex: 1;
-      padding: 6px 10px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      font-size: 13px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
-    .setting-row input[type="text"]:focus,
-    .setting-row input[type="time"]:focus {
-      border-color: #e94560;
-    }
-
-    .setting-row input[type="color"] {
-      width: 40px;
-      height: 28px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      cursor: pointer;
-      padding: 0;
-    }
-
-    .setting-row input[type="range"] {
-      flex: 1;
-      margin-left: 8px;
-    }
-
-    .setting-row .value-label {
-      font-size: 12px;
-      color: #999;
-      width: 36px;
-      text-align: right;
-    }
-
-    .setting-row .checkbox-wrap {
-      flex: 1;
-      display: flex;
-      align-items: center;
-    }
-
-    .setting-row input[type="checkbox"] {
-      width: 16px;
-      height: 16px;
-      margin-right: 6px;
-      cursor: pointer;
-    }
-
-    .setting-row .checkbox-label {
-      font-size: 13px;
-      color: #666;
-    }
-
-    .save-btn {
-      width: 100%;
-      padding: 10px;
-      background: linear-gradient(135deg, #e94560, #c23152);
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
       font-weight: 600;
-      cursor: pointer;
-      margin-top: 16px;
-      transition: opacity 0.2s;
+      letter-spacing: 0.2px;
+      color: var(--text-2);
+      margin-bottom: var(--space-sm);
     }
 
-    .save-btn:hover {
-      opacity: 0.9;
-    }
-
-    .save-btn:active {
-      transform: scale(0.98);
-    }
-
-    .toast {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%) translateY(20px);
-      background: #1a1a2e;
-      color: #fff;
-      padding: 8px 20px;
-      border-radius: 20px;
-      font-size: 13px;
-      opacity: 0;
-      transition: all 0.3s;
-      pointer-events: none;
-      z-index: 999;
-    }
-
-    .toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    .info-bar {
-      background: #fff;
-      border-radius: 10px;
-      padding: 12px 16px;
-      margin-bottom: 16px;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .info-bar .clock {
-      font-size: 28px;
-      font-weight: 700;
-      color: #e94560;
-    }
-
-    .info-bar .info-text {
-      flex: 1;
-    }
-
-    .info-bar .info-text .custom-msg {
-      font-size: 13px;
-      color: #333;
-      margin-bottom: 2px;
-    }
-
-    .info-bar .info-text .checkin-status {
-      font-size: 11px;
-      color: #999;
-    }
-
-    .info-bar .info-text .checkin-status .ok {
-      color: #4ade80;
-    }
-
-    .info-bar .info-text .checkin-status .wait {
-      color: #fbbf24;
+    .punch-section h3::before,
+    .settings-section h3::before,
+    .dingtalk-section h3::before {
+      content: "";
+      width: 3px;
+      height: 12px;
+      border-radius: 2px;
+      background: var(--primary);
     }
 
     /* ===== 今日打卡 ===== */
-    .punch-section {
-      background: #fff;
-      border-radius: 10px;
-      padding: 16px;
-      margin-bottom: 16px;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-    }
-
-    .punch-section h3 {
-      font-size: 14px;
-      font-weight: 700;
-      margin-bottom: 12px;
-      color: #1a1a2e;
-    }
-
-    .punch-buttons {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-
-    .punch-btn {
-      flex: 1;
-      padding: 10px;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: opacity 0.2s, transform 0.1s;
-    }
-
-    .punch-btn.on {
-      background: linear-gradient(135deg, #4ade80, #22c55e);
-      color: #fff;
-    }
-
-    .punch-btn.off {
-      background: linear-gradient(135deg, #60a5fa, #3b82f6);
-      color: #fff;
-    }
-
-    .punch-btn:hover { opacity: 0.92; }
-    .punch-btn:active { transform: scale(0.98); }
-    .punch-btn:disabled {
-      background: #e5e5e5;
-      color: #aaa;
-      cursor: not-allowed;
-    }
-
     .today-records {
       display: flex;
-      gap: 10px;
-      margin-bottom: 10px;
+      gap: var(--space-sm);
+      margin-bottom: var(--space-sm);
     }
 
     .record-card {
       flex: 1;
-      background: #f8f9fb;
+      min-width: 0;
+      background: #fafbfc;
+      border: 1px solid transparent;
       border-radius: 8px;
-      padding: 10px 12px;
-      border: 1px solid #eef0f3;
+      padding: var(--space-sm);
     }
 
     .record-card .label {
       font-size: 11px;
-      color: #999;
+      color: var(--text-3);
       margin-bottom: 4px;
     }
 
     .record-card .time {
       font-size: 18px;
-      font-weight: 700;
-      color: #1a1a2e;
+      font-weight: 600;
+      color: var(--text);
     }
 
     .record-card .time.empty {
-      color: #ccc;
+      color: #c9cdd5;
       font-weight: 500;
     }
 
-    /* 可编辑的打卡时间输入框 */
     .time-input {
       width: 100%;
       border: none;
+      border-radius: 4px;
       background: transparent;
-      font-family: inherit;
-      font-size: 18px;
-      font-weight: 700;
-      color: #1a1a2e;
+      font-family: var(--mono);
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text);
       padding: 0;
       outline: none;
       cursor: pointer;
-    }
-
-    .time-input::-webkit-calendar-picker-indicator {
-      opacity: 0.35;
-      cursor: pointer;
-    }
-
-    .time-input:focus {
-      background: #eef2ff;
-      border-radius: 4px;
-    }
-
-    .record-card .edit-hint {
-      font-size: 10px;
-      color: #bbb;
-      margin-top: 2px;
-    }
-
-    /* 推算下班 + 倒计时 */
-    .countdown-bar {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: #fff5f7;
-      border: 1px solid #ffe0e6;
-      border-radius: 8px;
-      padding: 8px 12px;
-      margin-bottom: 12px;
-    }
-
-    .countdown-bar .cd-label {
-      font-size: 11px;
-      color: #b07a86;
-    }
-
-    .countdown-bar .cd-time {
-      font-size: 16px;
-      font-weight: 700;
-      color: #e94560;
       font-variant-numeric: tabular-nums;
     }
 
-    .countdown-bar .cd-remain {
-      margin-left: auto;
-      font-size: 12px;
-      font-weight: 600;
-      color: #e94560;
+    .time-input::-webkit-calendar-picker-indicator {
+      opacity: 0.3;
+      cursor: pointer;
     }
 
-    .countdown-bar.done {
-      background: #f0fdf4;
-      border-color: #bbf7d0;
-    }
-    .countdown-bar.done .cd-time,
-    .countdown-bar.done .cd-remain {
-      color: #16a34a;
+    .time-input:focus { background: var(--primary-soft); }
+
+    .record-card .edit-hint {
+      font-size: 10px;
+      color: #b3b8c2;
+      margin-top: 2px;
     }
 
     .record-card .badge {
@@ -502,151 +334,434 @@
       vertical-align: middle;
     }
 
-    .record-card .badge.manual { background: #e0e7ff; color: #3b82f6; }
-    .record-card .badge.dingtalk { background: #fef3c7; color: #d97706; }
+    .record-card .badge.manual {
+      background: #eef0f4;
+      color: var(--text-2);
+    }
+
+    .record-card .badge.dingtalk {
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+
+    /* 推算下班 + 倒计时 */
+    .countdown-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #fafbfc;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px var(--space-sm);
+      margin-bottom: var(--space-sm);
+    }
+
+    .countdown-bar .cd-label {
+      font-size: 11px;
+      color: var(--text-3);
+    }
+
+    .countdown-bar .cd-time {
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .countdown-bar .cd-remain {
+      margin-left: auto;
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-2);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .countdown-bar.done {
+      background: var(--primary-soft);
+      border-color: #f6d7dc;
+    }
+
+    .countdown-bar.done .cd-time,
+    .countdown-bar.done .cd-remain { color: var(--text); }
+
+    /* 打卡按钮：同尺寸，实心主按钮 + 描边次按钮 */
+    .punch-buttons {
+      display: flex;
+      gap: var(--space-sm);
+      margin-bottom: var(--space-sm);
+    }
+
+    .punch-btn {
+      flex: 1 1 0;
+      height: 40px;
+      padding: 0 var(--space);
+      border: 1px solid transparent;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .punch-btn.on {
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    .punch-btn.on:hover { background: var(--primary-hover); }
+
+    .punch-btn.off {
+      background: var(--surface);
+      color: var(--primary);
+      border-color: #f0cdd2;
+    }
+
+    .punch-btn.off:hover { background: var(--primary-soft); }
+
+    .punch-btn:active { transform: scale(0.99); }
+
+    .punch-btn:disabled {
+      background: #f1f2f5;
+      color: #aab0ba;
+      border-color: transparent;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .link-btn {
+      background: none;
+      border: none;
+      color: var(--text-3);
+      font-family: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      padding: 0;
+      margin-top: 4px;
+    }
+
+    .link-btn:hover { color: var(--primary); }
 
     .recent-list {
-      margin-top: 10px;
-      border-top: 1px solid #f0f0f0;
-      padding-top: 10px;
+      margin-top: var(--space-sm);
+      border-top: 1px solid var(--divider);
+      padding-top: var(--space-sm);
     }
 
     .recent-list .recent-title {
-      font-size: 12px;
-      color: #999;
+      font-size: 11px;
+      color: var(--text-3);
       margin-bottom: 8px;
     }
 
     .recent-row {
       display: flex;
       justify-content: space-between;
+      gap: var(--space-sm);
       font-size: 12px;
-      padding: 4px 0;
-      color: #555;
-      border-bottom: 1px dashed #f3f3f3;
+      padding: 5px 0;
+      color: var(--text-2);
+      border-bottom: 1px solid var(--divider);
     }
 
     .recent-row:last-child { border-bottom: none; }
-    .recent-row .date { color: #888; }
-    .recent-row .times { font-variant-numeric: tabular-nums; }
-    .recent-row .times .missing { color: #ccc; }
 
-    .link-btn {
-      background: none;
-      border: none;
-      color: #e94560;
-      font-size: 12px;
-      cursor: pointer;
-      padding: 0;
-      margin-top: 8px;
+    .recent-row .date {
+      color: var(--text-3);
+      font-variant-numeric: tabular-nums;
     }
-    .link-btn:hover { text-decoration: underline; }
+
+    .recent-row .times { font-variant-numeric: tabular-nums; }
+
+    .recent-row .times .missing { color: #c9cdd5; }
 
     /* ===== 钉钉同步配置 ===== */
-    .dingtalk-section {
-      background: #fff;
-      border-radius: 10px;
-      padding: 16px;
-      margin-bottom: 16px;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-    }
-
-    .dingtalk-section h3 {
-      font-size: 14px;
-      font-weight: 700;
-      margin-bottom: 6px;
-      color: #1a1a2e;
-    }
-
     .dingtalk-tip {
       font-size: 11px;
-      color: #999;
-      line-height: 1.5;
-      margin-bottom: 12px;
+      line-height: 1.6;
+      color: var(--text-3);
+      margin-bottom: var(--space-sm);
     }
 
-    .dingtalk-tip a { color: #3b82f6; }
+    .dingtalk-tip a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    .dingtalk-tip a:hover { text-decoration: underline; }
+
+    /* 钉钉配置：可折叠（默认收起） */
+    .dt-collapse { padding: 0; }
+
+    .dt-summary {
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px var(--space);
+      cursor: pointer;
+      user-select: none;
+      border-radius: var(--radius);
+      transition: background 0.15s ease;
+    }
+
+    .dt-summary::-webkit-details-marker { display: none; }
+    .dt-summary:hover { background: #fafbfc; }
+    .dt-collapse[open] .dt-summary { border-radius: 10px 10px 0 0; }
+
+    .dt-title {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+      color: var(--text-2);
+    }
+
+    .dt-badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: #f1f2f5;
+      color: var(--text-3);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .dt-badge.on {
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+
+    .dt-badge.warn {
+      background: #f1f2f5;
+      color: var(--text-2);
+    }
+
+    .dt-arrow {
+      width: 0;
+      height: 0;
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-top: 5px solid #b3b8c2;
+      margin-top: 2px;
+      transition: transform 0.18s ease;
+    }
+
+    .dt-collapse[open] .dt-arrow { transform: rotate(180deg); }
+
+    .dt-body { padding: 0 var(--space) var(--space); }
 
     .sync-status {
       font-size: 12px;
-      margin-top: 10px;
-      padding: 8px 10px;
-      border-radius: 6px;
-      background: #f8f9fb;
+      margin-top: var(--space-sm);
+      padding: 10px var(--space-sm);
+      border-radius: 8px;
+      background: #fafbfc;
+      color: var(--text-2);
     }
-    .sync-status.ok { color: #16a34a; }
-    .sync-status.err { color: #dc2626; }
+
+    .sync-status.ok { color: var(--primary); }
+    .sync-status.err { color: #b42318; }
 
     .sync-btn {
       width: 100%;
-      padding: 9px;
-      background: linear-gradient(135deg, #3b82f6, #2563eb);
-      color: #fff;
-      border: none;
+      height: 38px;
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
       border-radius: 8px;
+      font-family: inherit;
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
-      margin-top: 12px;
+      margin-top: var(--space-sm);
     }
-    .sync-btn:hover { opacity: 0.92; }
-    .sync-btn:disabled { background: #cbd5e1; cursor: not-allowed; }
 
+    .sync-btn:hover { background: #f5f6f9; }
+
+    .sync-btn:disabled {
+      background: #f7f8fa;
+      color: #aab0ba;
+      cursor: not-allowed;
+    }
+
+    /* ===== 设置项 ===== */
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+      margin-bottom: var(--space-sm);
+    }
+
+    .setting-row:last-child { margin-bottom: 0; }
+
+    .setting-row label {
+      font-size: 13px;
+      color: var(--text-2);
+      flex-shrink: 0;
+      width: 84px;
+    }
+
+    .setting-row input[type="text"],
+    .setting-row input[type="time"],
     .setting-row input[type="password"] {
       flex: 1;
-      padding: 6px 10px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
+      min-width: 0;
+      height: 34px;
+      padding: 0 var(--space-sm);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      font-family: inherit;
       font-size: 13px;
+      color: var(--text);
       outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
-    .setting-row input[type="password"]:focus { border-color: #e94560; }
 
-    /* 弹性工作制 */
-    .inline-range {
+    .setting-row input[type="text"]:focus,
+    .setting-row input[type="time"]:focus,
+    .setting-row input[type="password"]:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(224, 69, 90, 0.12);
+    }
+
+    .setting-row input[type="color"] {
+      width: 40px;
+      height: 30px;
+      padding: 2px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      cursor: pointer;
+    }
+
+    .setting-row input[type="range"] {
+      flex: 1;
+      margin-left: 0;
+      accent-color: var(--primary);
+    }
+
+    .setting-row .value-label {
+      width: 36px;
+      font-size: 12px;
+      color: var(--text-3);
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .setting-row .checkbox-wrap {
       flex: 1;
       display: flex;
       align-items: center;
       gap: 8px;
     }
 
+    .setting-row input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      margin-right: 0;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+
+    .setting-row .checkbox-label {
+      font-size: 13px;
+      color: var(--text-2);
+    }
+
+    .inline-range {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
     .inline-range input[type="time"],
     .inline-range input[type="number"] {
       flex: 1;
-      padding: 6px 10px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      font-size: 13px;
-      outline: none;
+      min-width: 0;
+      height: 34px;
+      padding: 0 var(--space-sm);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
       font-family: inherit;
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
     }
 
-    .inline-range input[type="number"] {
-      max-width: 90px;
-    }
+    .inline-range input[type="number"] { max-width: 90px; }
 
     .inline-range .sep {
       font-size: 12px;
-      color: #999;
+      color: var(--text-3);
       flex-shrink: 0;
     }
 
     .derived {
       flex: 1;
+      padding: 8px var(--space-sm);
+      border-radius: 8px;
+      background: #fafbfc;
       font-size: 13px;
       font-weight: 600;
-      color: #e94560;
-      background: #fff5f7;
-      border-radius: 6px;
-      padding: 6px 10px;
+      color: var(--text);
       text-align: center;
+      font-variant-numeric: tabular-nums;
     }
+
+    .save-btn {
+      width: 100%;
+      height: 42px;
+      margin-top: var(--space);
+      border: none;
+      border-radius: 8px;
+      background: var(--primary);
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .save-btn:hover { background: var(--primary-hover); }
+    .save-btn:active { transform: scale(0.995); }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(12px);
+      background: #17191f;
+      color: #ffffff;
+      padding: 8px var(--space);
+      border-radius: 8px;
+      font-size: 12px;
+      opacity: 0;
+      transition: all 0.25s ease;
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  
   </style>
 </head>
 <body>
   <!-- 标题栏 -->
   <div class="title-bar">
-    <span class="title">🖥️ 悬浮台历</span>
+    <span class="title">悬浮台历</span>
     <div class="controls">
       <button class="btn minimize" onclick="window.api.minimizeWindow()">—</button>
       <button class="btn close" onclick="window.api.closeWindow()">✕</button>
@@ -675,7 +790,7 @@
 
     <!-- 今日打卡 -->
     <div class="punch-section">
-      <h3>⏱️ 今日打卡</h3>
+      <h3>今日打卡</h3>
 
       <div class="today-records">
         <div class="record-card">
@@ -709,55 +824,76 @@
       </div>
     </div>
 
-    <!-- 钉钉自动同步 -->
+    <!-- 启动与系统 -->
     <div class="dingtalk-section">
-      <h3>📡 钉钉打卡自动同步</h3>
-      <div class="dingtalk-tip">
-        需企业主管理员在
-        <a href="https://open.dingtalk.com/" target="_blank">钉钉开放平台</a>
-        创建「企业内部应用」，申请「考勤数据读权限」后填写下方信息。
-      </div>
+      <h3>启动与系统</h3>
+      <div class="dingtalk-tip" id="autoLaunchTip">勾选后登录 Windows 时自动启动，桌面直接出现悬浮窗。</div>
 
       <div class="setting-row">
-        <label>启用同步</label>
+        <label>开机自启</label>
         <div class="checkbox-wrap">
-          <input type="checkbox" id="dtEnabled">
-          <span class="checkbox-label">开启后自动拉取钉钉打卡时间</span>
+          <input type="checkbox" id="autoLaunchInput">
+          <span class="checkbox-label">登录 Windows 后自动启动</span>
         </div>
       </div>
-
-      <div class="setting-row">
-        <label>AppKey</label>
-        <input type="text" id="dtAppKey" placeholder="企业内部应用的 AppKey">
-      </div>
-
-      <div class="setting-row">
-        <label>AppSecret</label>
-        <input type="password" id="dtAppSecret" placeholder="应用的 AppSecret">
-      </div>
-
-      <div class="setting-row">
-        <label>UserId</label>
-        <input type="text" id="dtUserId" placeholder="你的钉钉 staffId / userId">
-      </div>
-
-      <div class="setting-row">
-        <label>自动同步</label>
-        <div class="checkbox-wrap">
-          <input type="checkbox" id="dtAutoSync">
-          <span class="checkbox-label">每</span>
-          <input type="number" id="dtInterval" min="1" max="120" style="width:48px;padding:4px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
-          <span class="checkbox-label">分钟同步一次</span>
-        </div>
-      </div>
-
-      <button class="sync-btn" id="syncNowBtn">立即同步今天</button>
-      <div class="sync-status" id="syncStatus" style="display:none;"></div>
     </div>
+
+    <!-- 钉钉自动同步（默认折叠） -->
+    <details class="dingtalk-section dt-collapse" id="dtSection">
+      <summary class="dt-summary">
+        <span class="dt-title">钉钉打卡自动同步</span>
+        <span class="dt-badge" id="dtBadge">未配置</span>
+        <span class="dt-arrow"></span>
+      </summary>
+
+      <div class="dt-body">
+        <div class="dingtalk-tip">
+          需企业主管理员在
+          <a href="https://open.dingtalk.com/" target="_blank">钉钉开放平台</a>
+          创建「企业内部应用」，申请「考勤数据读权限」后填写下方信息。
+        </div>
+
+        <div class="setting-row">
+          <label>启用同步</label>
+          <div class="checkbox-wrap">
+            <input type="checkbox" id="dtEnabled">
+            <span class="checkbox-label">开启后自动拉取钉钉打卡时间</span>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <label>AppKey</label>
+          <input type="text" id="dtAppKey" placeholder="企业内部应用的 AppKey">
+        </div>
+
+        <div class="setting-row">
+          <label>AppSecret</label>
+          <input type="password" id="dtAppSecret" placeholder="应用的 AppSecret">
+        </div>
+
+        <div class="setting-row">
+          <label>UserId</label>
+          <input type="text" id="dtUserId" placeholder="你的钉钉 staffId / userId">
+        </div>
+
+        <div class="setting-row">
+          <label>自动同步</label>
+          <div class="checkbox-wrap">
+            <input type="checkbox" id="dtAutoSync">
+            <span class="checkbox-label">每</span>
+            <input type="number" id="dtInterval" min="1" max="120" style="width:56px;height:34px;padding:0 8px;border:1px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface);">
+            <span class="checkbox-label">分钟同步一次</span>
+          </div>
+        </div>
+
+        <button class="sync-btn" id="syncNowBtn">立即同步今天</button>
+        <div class="sync-status" id="syncStatus" style="display:none;"></div>
+      </div>
+    </details>
 
     <!-- 设置 -->
     <div class="settings-section">
-      <h3>⚙️ 悬浮窗设置</h3>
+      <h3>悬浮窗设置</h3>
 
       <div class="setting-row">
         <label>自定义文字</label>
@@ -845,7 +981,7 @@
         </div>
       </div>
 
-      <button class="save-btn" id="saveBtn">💾 保存设置</button>
+      <button class="save-btn" id="saveBtn">保存设置</button>
     </div>
   </div>
 
@@ -891,6 +1027,37 @@
       document.getElementById('dtAutoSync').checked = dt.autoSync !== false;
       document.getElementById('dtInterval').value = dt.syncIntervalMin || 10;
 
+      // 钉钉区块默认折叠（记住上次展开状态）
+      const dtSection = document.getElementById('dtSection');
+      try {
+        dtSection.open = localStorage.getItem('dtSectionOpen') === '1';
+      } catch (e) {
+        dtSection.open = false;
+      }
+      dtSection.addEventListener('toggle', () => {
+        // 因同步失败被自动展开的，不写入记忆，下次仍默认折叠
+        if (dtAutoRevealed) {
+          dtAutoRevealed = false;
+          return;
+        }
+        try { localStorage.setItem('dtSectionOpen', dtSection.open ? '1' : '0'); } catch (e) {}
+      });
+      updateDtBadge();
+
+      // 开机自启状态（以系统实际状态为准）
+      try {
+        const al = await window.api.getAutoLaunch();
+        const cb = document.getElementById('autoLaunchInput');
+        cb.checked = !!al.enabled;
+        if (!al.available) {
+          cb.disabled = true;
+          document.getElementById('autoLaunchTip').textContent =
+            al.reason || '当前环境不可用，打包成 exe 后才生效';
+        }
+      } catch (e) {
+        document.getElementById('autoLaunchInput').disabled = true;
+      }
+
       // 打卡记录
       try {
         todayRecords = await window.api.getRecords();
@@ -903,6 +1070,7 @@
       // 更新信息条
       updateInfoBar();
       setInterval(updateInfoBar, 1000);
+      startCountdownLoop();
 
       // 渲染日历
       renderCalendar();
@@ -920,7 +1088,42 @@
         el.style.display = 'block';
         el.className = 'sync-status ' + (status.ok ? 'ok' : 'err');
         el.textContent = (status.ok ? '✓ ' : '✕ ') + status.text;
+        // 失败时把折叠区展开，否则报错信息看不到
+        if (!status.ok) revealDtSection();
       });
+    }
+
+    // 同步出错时自动展开钉钉区块（不计入折叠记忆）
+    let dtAutoRevealed = false;
+    function revealDtSection() {
+      const s = document.getElementById('dtSection');
+      if (!s || s.open) return;
+      dtAutoRevealed = true;
+      s.open = true;
+    }
+
+    // 折叠状态下也能看出钉钉同步的状态
+    function updateDtBadge() {
+      const badge = document.getElementById('dtBadge');
+      if (!badge) return;
+
+      const on = document.getElementById('dtEnabled').checked;
+      const filled = ['dtAppKey', 'dtAppSecret', 'dtUserId']
+        .every((id) => document.getElementById(id).value.trim());
+
+      let text = '未配置';
+      let cls = 'dt-badge';
+      if (on && filled) {
+        text = '已启用';
+        cls = 'dt-badge on';
+      } else if (on) {
+        text = '配置不完整';
+        cls = 'dt-badge warn';
+      } else if (filled) {
+        text = '已关闭';
+      }
+      badge.className = cls;
+      badge.textContent = text;
     }
 
     // 更新顶部信息条（显示真实打卡时间）
@@ -949,7 +1152,8 @@
       updateCountdown();
     }
 
-    // 推算下班时间 + 倒计时
+    // 推算下班时间 + 倒计时（精确到毫秒，由 rAF 每帧驱动）
+    let lastCdText = null;
     function updateCountdown() {
       const bar = document.getElementById('countdownBar');
       const targetEl = document.getElementById('cdTarget');
@@ -958,21 +1162,42 @@
       const realIn = todayRecords.onDuty;
       const realOut = todayRecords.offDuty;
       const target = Flex.computeOffDuty(realIn, config);
-      targetEl.textContent = target;
+      if (targetEl.textContent !== target) targetEl.textContent = target;
+
+      let text;
+      let done = false;
 
       if (realOut) {
-        bar.classList.add('done');
-        remainEl.textContent = '已下班 ✓';
-        return;
-      }
-      const sec = Flex.remainingSeconds(realIn, config, new Date());
-      if (sec != null && sec <= 0) {
-        bar.classList.add('done');
-        remainEl.textContent = '可以下班了 🎉';
+        done = true;
+        text = '已下班 ✓';
       } else {
-        bar.classList.remove('done');
-        remainEl.textContent = Flex.formatRemain(sec);
+        const ms = Flex.remainingMilliseconds(realIn, config, new Date());
+        if (ms == null) {
+          text = '';
+        } else if (ms <= 0) {
+          done = true;
+          text = '可以下班了 🎉';
+        } else {
+          text = '还有 ' + Flex.formatRemainMs(ms);
+        }
       }
+
+      if (text !== lastCdText) {
+        remainEl.textContent = text;
+        lastCdText = text;
+      }
+      if (bar.classList.contains('done') !== done) bar.classList.toggle('done', done);
+    }
+
+    // 毫秒级刷新循环
+    let cdRafId = null;
+    function startCountdownLoop() {
+      if (cdRafId != null) return;
+      const loop = () => {
+        updateCountdown();
+        cdRafId = requestAnimationFrame(loop);
+      };
+      cdRafId = requestAnimationFrame(loop);
     }
 
     // 渲染今日打卡卡片（时间框可直接编辑）
@@ -996,7 +1221,9 @@
       document.getElementById('punchOnBtn').disabled = !!todayRecords.onDuty;
       document.getElementById('punchOffBtn').disabled = !!todayRecords.offDuty;
 
-      updateCountdown();
+      // 记录一变，顶部信息条（含推算下班时间）和倒计时一起刷新，
+      // 不再只靠 setInterval 每秒兜底，避免改完时间后"下班"迟迟不变
+      updateInfoBar();
     }
 
     // 渲染最近 7 天
@@ -1044,20 +1271,57 @@
       toast('已清除今日记录');
     });
 
-    // 手动编辑打卡时间
-    document.getElementById('onDutyInput').addEventListener('change', async (e) => {
-      todayRecords = await window.api.setRecordTime('onDuty', e.target.value);
-      renderTodayRecords();
-      renderRecent();
-      toast(e.target.value ? '上班时间已改为 ' + e.target.value : '已清除上班时间');
+    // 开机自启开关
+    document.getElementById('autoLaunchInput').addEventListener('change', async (e) => {
+      const want = e.target.checked;
+      try {
+        const r = await window.api.setAutoLaunch(want);
+        if (!r.ok) {
+          e.target.checked = !want;
+          toast(r.message || '设置失败');
+          return;
+        }
+        e.target.checked = !!r.enabled;
+        toast(r.enabled ? '已开启开机自启' : '已关闭开机自启');
+      } catch (err) {
+        e.target.checked = !want;
+        toast('设置失败：' + (err.message || err));
+      }
     });
 
-    document.getElementById('offDutyInput').addEventListener('change', async (e) => {
-      todayRecords = await window.api.setRecordTime('offDuty', e.target.value);
-      renderTodayRecords();
-      renderRecent();
-      toast(e.target.value ? '下班时间已改为 ' + e.target.value : '已清除下班时间');
-    });
+    // 手动编辑打卡时间
+    // time 输入框在键盘改数字 / 点选时分针时，往往只派发 input，change 要失焦才触发。
+    // 只监听 change 就会出现"输入框显示已改，但记录没保存、推算下班时间不动"。
+    // 这里 input + change 都监听：input 防抖兜底，change 立即生效。
+    function bindTimeInput(id, type, label) {
+      const el = document.getElementById(id);
+      let timer = null;
+
+      const apply = async () => {
+        const value = el.value;
+        // 与当前记录一致就不写盘，省掉无意义的 IPC
+        if (value === (todayRecords[type] || '')) return;
+        todayRecords = await window.api.setRecordTime(type, value);
+        renderTodayRecords();
+        renderRecent();
+        toast(value ? `${label}时间已改为 ${value}` : `已清除${label}时间`);
+      };
+
+      el.addEventListener('input', () => {
+        // 逐位输入过程中 value 可能短暂为空，此时别把记录清掉
+        if (!el.value) return;
+        clearTimeout(timer);
+        timer = setTimeout(apply, 500);
+      });
+
+      el.addEventListener('change', () => {
+        clearTimeout(timer);
+        apply();
+      });
+    }
+
+    bindTimeInput('onDutyInput', 'onDuty', '上班');
+    bindTimeInput('offDutyInput', 'offDuty', '下班');
 
     // 弹性工作制：切换显示 + 实时推算下班窗口
     function toggleFlexFields() {
@@ -1076,9 +1340,40 @@
       document.getElementById('flexOffWindow').textContent = `${from} — ${to}`;
     }
 
-    document.getElementById('flexEnabled').addEventListener('change', toggleFlexFields);
+    // 弹性设置改完自动保存：用户直觉是"改了就生效"，
+    // 而打卡时间是即时保存的，两处行为不一致会让人以为改了没用（实测踩过）。
+    let flexSaveTimer = null;
+    function scheduleFlexSave() {
+      clearTimeout(flexSaveTimer);
+      flexSaveTimer = setTimeout(async () => {
+        const flex = {
+          enabled: document.getElementById('flexEnabled').checked,
+          startBegin: document.getElementById('flexStartBegin').value || '08:30',
+          startEnd: document.getElementById('flexStartEnd').value || '09:00',
+          workMinutes: Math.round((parseFloat(document.getElementById('flexWorkHours').value) || 9.5) * 60),
+        };
+        // main.js 的 config:save 是深合并，只传 flex 不会冲掉其它设置
+        config = await window.api.saveConfig({ flex });
+        updateInfoBar(); // 推算下班时间 / 倒计时立即按新弹性重算
+      }, 600);
+    }
+
+    document.getElementById('flexEnabled').addEventListener('change', () => {
+      toggleFlexFields();
+      scheduleFlexSave();
+    });
     ['flexStartBegin', 'flexStartEnd', 'flexWorkHours'].forEach((id) => {
-      document.getElementById(id).addEventListener('input', updateFlexOffWindow);
+      document.getElementById(id).addEventListener('input', () => {
+        updateFlexOffWindow();
+        scheduleFlexSave();
+      });
+    });
+
+    // 钉钉配置项变动时同步更新折叠标题上的状态徽标
+    ['dtEnabled', 'dtAppKey', 'dtAppSecret', 'dtUserId'].forEach((id) => {
+      const el = document.getElementById(id);
+      el.addEventListener('input', updateDtBadge);
+      el.addEventListener('change', updateDtBadge);
     });
 
     // 立即同步钉钉
@@ -1093,6 +1388,7 @@
           el.style.display = 'block';
           el.className = 'sync-status err';
           el.textContent = '✕ ' + (res.error || '同步失败');
+          revealDtSection();
         }
       } finally {
         btn.disabled = false;
@@ -1217,6 +1513,7 @@
 
       config = await window.api.saveConfig(newConfig);
       updateInfoBar();
+      updateDtBadge();
 
       // 显示 toast
       const toast = document.getElementById('toast');

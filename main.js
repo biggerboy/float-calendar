@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, screen, Tray, Menu, nativeImage, session } = require('electron');
+const { app, BrowserWindow, ipcMain, screen, Tray, Menu, nativeImage, session, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const records = require('./records');
@@ -161,6 +161,7 @@ function createFloatWindow() {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
+      spellcheck: false, // 悬浮窗没有输入框，关掉省内存
     },
   });
 
@@ -208,10 +209,12 @@ function createMainWindow() {
     alwaysOnTop: false,
     skipTaskbar: false,
     hasShadow: true,
+    icon: path.join(__dirname, 'assets', 'icon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
+      spellcheck: false, // 本应用没有富文本输入，关掉省内存
     },
   });
 
@@ -224,6 +227,88 @@ function createMainWindow() {
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
+}
+
+// 打包版的 userData 目录名跟随 productName（FloatCalendar），与开发模式的
+// float-calendar 不同。首次运行把旧配置和打卡记录搬过来，避免用户设置丢失。
+function migrateLegacyUserData() {
+  if (!app.isPackaged) return;
+  try {
+    const legacyDir = path.join(app.getPath('appData'), 'float-calendar');
+    const currentDir = app.getPath('userData');
+    if (path.resolve(legacyDir) === path.resolve(currentDir)) return;
+    if (!fs.existsSync(legacyDir)) return;
+
+    fs.mkdirSync(currentDir, { recursive: true });
+    for (const f of ['config.json', 'records.json']) {
+      const src = path.join(legacyDir, f);
+      const dst = path.join(currentDir, f);
+      // 只在目标不存在时复制，避免覆盖打包版已有数据
+      if (fs.existsSync(src) && !fs.existsSync(dst)) {
+        fs.copyFileSync(src, dst);
+        console.log('已从旧目录迁移:', f);
+      }
+    }
+  } catch (e) {
+    console.warn('迁移旧数据失败:', e.message);
+  }
+}
+
+// ========== 开机自启 ==========
+// 便携版每次运行会解压到临时目录，注册表必须写原始 exe 的路径，否则重启后失效
+const LOGIN_ITEM_NAME = 'FloatCalendar';
+
+function getLaunchTarget() {
+  const portable = process.env.PORTABLE_EXECUTABLE_FILE;
+  if (portable && fs.existsSync(portable)) return portable;
+  return process.execPath;
+}
+
+function normalizePath(p) {
+  return String(p || '').replace(/\\/g, '/').toLowerCase();
+}
+
+function getAutoLaunchState() {
+  const exePath = getLaunchTarget();
+  if (!app.isPackaged) {
+    return {
+      enabled: false,
+      available: false,
+      exePath,
+      reason: '开发模式不可用，打包成 exe 后才生效',
+    };
+  }
+  try {
+    const s = app.getLoginItemSettings({ path: exePath, name: LOGIN_ITEM_NAME });
+    // 指定自定义项名时 openAtLogin 不可靠，以 launchItems 里是否存在指向本 exe 的项为准
+    const items = s.launchItems || [];
+    const enabled = items.some(
+      (it) => it.enabled !== false && normalizePath(it.path) === normalizePath(exePath)
+    );
+    return { enabled, available: true, exePath };
+  } catch (e) {
+    return { enabled: false, available: false, exePath, reason: String(e.message || e) };
+  }
+}
+
+function setAutoLaunch(enabled) {
+  if (!app.isPackaged) {
+    return { ...getAutoLaunchState(), ok: false, message: '开发模式不可用，请打包后再设置' };
+  }
+  const exePath = getLaunchTarget();
+  try {
+    app.setLoginItemSettings({
+      openAtLogin: !!enabled,
+      path: exePath,
+      args: [],
+      name: LOGIN_ITEM_NAME,
+    });
+    const state = getAutoLaunchState();
+    const ok = state.enabled === !!enabled;
+    return { ...state, ok, message: ok ? '' : '注册表写入后状态未生效，请检查系统权限' };
+  } catch (e) {
+    return { ...getAutoLaunchState(), ok: false, message: String(e.message || e) };
+  }
 }
 
 // ========== 系统托盘 ==========
@@ -255,6 +340,19 @@ function buildTrayMenu() {
         }
       },
     },
+    {
+      label: '开机自启',
+      type: 'checkbox',
+      checked: getAutoLaunchState().enabled,
+      enabled: getAutoLaunchState().available,
+      click: (item) => {
+        const r = setAutoLaunch(item.checked);
+        if (tray) tray.setContextMenu(buildTrayMenu());
+        if (!r.ok && r.message) {
+          dialog.showMessageBox({ type: 'info', message: r.message, buttons: ['好'] });
+        }
+      },
+    },
     { type: 'separator' },
     {
       label: '退出',
@@ -274,8 +372,11 @@ function recordPunch(type) {
 }
 
 function createTray() {
-  // 用一个简单的 1x1 透明图标占位（避免没有图标文件报错）
-  const icon = nativeImage.createEmpty();
+  // 用真实图标，否则打包后托盘是一片空白
+  const iconPath = path.join(__dirname, 'assets', 'tray.png');
+  const icon = fs.existsSync(iconPath)
+    ? nativeImage.createFromPath(iconPath)
+    : nativeImage.createEmpty();
   tray = new Tray(icon);
 
   tray.setToolTip('悬浮台历');
@@ -287,6 +388,14 @@ function createTray() {
 }
 
 // ========== IPC 通信 ==========
+
+// 开机自启：查询 / 设置
+ipcMain.handle('autolaunch:get', () => getAutoLaunchState());
+ipcMain.handle('autolaunch:set', (event, enabled) => {
+  const r = setAutoLaunch(enabled);
+  if (tray) tray.setContextMenu(buildTrayMenu());
+  return r;
+});
 
 // 获取配置
 ipcMain.handle('config:get', () => {
@@ -356,38 +465,59 @@ ipcMain.handle('main:minimize', () => {
   }
 });
 
+// 禁用硬件加速：本应用只有一个很小的悬浮窗 + 按需打开的主窗口，
+// 软件渲染完全够用，能省掉整个 GPU 进程（约 120MB 私有内存）。
+app.disableHardwareAcceleration();
 // 禁用 GPU 磁盘缓存（Windows 上透明窗口容易出现合成层缓存错乱）
 app.commandLine.appendSwitch('disable-gpu-cache');
 app.commandLine.appendSwitch('disable-http-cache');
 
 // ========== App 生命周期 ==========
-app.whenReady().then(async () => {
-  // 启动时清一次渲染缓存，保证 HTML/CSS 改动立即生效
-  try {
-    await session.defaultSession.clearCache();
-  } catch (e) {
-    console.warn('清理缓存失败:', e);
-  }
+// 单实例锁：开机自启后再手动双击，不应出现第二个悬浮窗
+const gotSingleInstanceLock = app.requestSingleInstanceLock();
 
-  const userData = app.getPath('userData');
-  configPath = path.join(userData, 'config.json');
-  records.init(userData);
-  currentConfig = loadConfig();
-  createFloatWindow();
-  createTray();
-  scheduleSync();
-
-  // 启动时若已配置钉钉，立即同步一次
-  if (currentConfig.dingtalk && currentConfig.dingtalk.enabled) {
-    syncFromDingtalk(true);
-  }
-
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createFloatWindow();
-    }
+if (!gotSingleInstanceLock) {
+  // 注意：ready 之前 app.quit() 可能不生效，必须用 app.exit() 立即终止
+  console.log('[single-instance] 已有实例在运行，本进程退出');
+  app.exit(0);
+} else {
+  app.on('second-instance', () => {
+    // 已有实例在跑：把主窗口叫到前台
+    console.log('[single-instance] 检测到重复启动，聚焦已有窗口');
+    if (app.isReady()) createMainWindow();
   });
-});
+
+  app.whenReady().then(async () => {
+    // 启动时清一次渲染缓存，保证 HTML/CSS 改动立即生效
+    try {
+      await session.defaultSession.clearCache();
+    } catch (e) {
+      console.warn('清理缓存失败:', e);
+    }
+
+    migrateLegacyUserData();
+
+    const userData = app.getPath('userData');
+    configPath = path.join(userData, 'config.json');
+    records.init(userData);
+    currentConfig = loadConfig();
+
+    createFloatWindow();
+    createTray();
+    scheduleSync();
+
+    // 启动时若已配置钉钉，立即同步一次
+    if (currentConfig.dingtalk && currentConfig.dingtalk.enabled) {
+      syncFromDingtalk(true);
+    }
+
+    app.on('activate', () => {
+      if (BrowserWindow.getAllWindows().length === 0) {
+        createFloatWindow();
+      }
+    });
+  });
+}
 
 app.on('window-all-closed', () => {
   // macOS 上关闭窗口不退出应用
